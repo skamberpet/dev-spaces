@@ -1,0 +1,17 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+    name: "sandeep"
+    labels:
+        app: "sandeep"
+    annotations:
+        kubernetes.io/ingress.class: addon-http-application-routing
+spec:
+    rules:
+        - host: sandeepd247-sandeep.e0ccd6546bf94ccb86b8.eastus2.aksapp.io
+          http:
+            paths:
+            - path: /
+              backend:
+                serviceName: "sandeep"
+                servicePort: 80
