@@ -1,0 +1,16 @@
+apiVersion : apps/v1beta1
+kind: Deployment
+metadata:
+  name: "sandeep"
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: "sandeep"
+    spec:
+      containers:
+        - name: "sandeep"
+          image: "acrska.azurecr.io/sandeep"
+          ports:
+          - containerPort: 80
