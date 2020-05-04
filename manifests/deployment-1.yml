@@ -1,0 +1,16 @@
+apiVersion : apps/v1beta1
+kind: Deployment
+metadata:
+  name: "sandeepcluster"
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: "sandeepcluster"
+    spec:
+      containers:
+        - name: "sandeepcluster"
+          image: "dockerimage01.azurecr.io/sandeepcluster"
+          ports:
+          - containerPort: 80
