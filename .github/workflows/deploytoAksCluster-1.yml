@@ -1,0 +1,50 @@
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    
+    - uses: azure/docker-login@v1
+      with:
+        login-server: dockerimage01.azurecr.io
+        username: ${{ secrets.acr_dockerimage01_username }}
+        password: ${{ secrets.acr_dockerimage01_password }}
+    
+    - name: Build and push image to ACR
+      id: build-image
+      run: |
+        docker build "$GITHUB_WORKSPACE/FROM node:lts-alpine  ENV PORT 80 EXPOSE 80  WORKDIR /app COPY package*.json ./ RUN npm install COPY . .  CMD ["npm", "start"]" -f  "dev-spaces/samples/BikeSharingApp/BikeSharingWeb" -t dockerimage01.azurecr.io/sandeepcluster:${{ github.sha }}
+        docker push dockerimage01.azurecr.io/sandeepcluster:${{ github.sha }}
+    
+    - uses: azure/k8s-set-context@v1
+      with:
+         kubeconfig: ${{ secrets.aks_sandeepcluster_kubeConfig }}
+      id: login
+    
+    - name: Create namespace
+      run: |
+        namespacePresent=`kubectl get namespace | grep sandeepcluster591e | wc -l`
+        if [ $namespacePresent -eq 0 ]
+        then
+            echo `kubectl create namespace sandeepcluster591e`
+        fi
+
+    - uses: azure/k8s-create-secret@v1
+      with:
+        namespace: sandeepcluster591e
+        container-registry-url: dockerimage01.azurecr.io
+        container-registry-username: ${{ secrets.acr_dockerimage01_username }}
+        container-registry-password: ${{ secrets.acr_dockerimage01_password }}
+        secret-name: sandeepclustdockerauth
+       
+    - uses: azure/k8s-deploy@v1
+      with:
+        namespace: sandeepcluster591e
+        manifests: |
+          manifests/deployment-1.yml
+          manifests/service-1.yml
+        images: |
+          dockerimage01.azurecr.io/sandeepcluster:${{ github.sha }}
+        imagepullsecrets: |
+          sandeepclustdockerauth
